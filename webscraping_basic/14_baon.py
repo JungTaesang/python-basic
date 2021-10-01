@@ -26,9 +26,11 @@ ctgrs_no= [int(c.attrs.get("href").split("cate_no=")[-1]) for c in ctgrs]
 ctgrs_no.remove(39)
 ctgrs_no.append(39)
 
+invalid_ctgrs = [56, 208]
 # 카테고리 페이지 내에서 페이지네이션 
 for ctgr_no in ctgrs_no:
     ctgr_url = get_url(ctgr_no, 1)
+
     if "https://ba-on.com/product/list.html?cate_no=56" in ctgr_url: continue
     elif "https://ba-on.com/product/list.html?cate_no=207" in ctgr_url: continue
     elif "https://ba-on.com/product/list.html?cate_no=132" in ctgr_url: continue
@@ -64,7 +66,6 @@ for ctgr_no in ctgrs_no:
             items =  soup.find_all("ul", {"class": "prdList"})[0].find_all("div", attrs = {"class":"thumbnail"})
         else:
             items =  soup.find_all("ul", {"class": "prdList"})[1].find_all("div", attrs = {"class":"thumbnail"})
-
 
         for items2 in items:
             item_link = "https://ba-on.com" + items2.find("a")["href"]

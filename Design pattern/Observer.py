@@ -1,4 +1,3 @@
-#https://lgphone.tistory.com/41?category=913303
 class C:
     def __init__(self, name):
         self._name = name

@@ -50,8 +50,5 @@ class Crawler:
 
 url = "https://api.kurly.com/v2/home/search?keyword=cj&sort_type=-1&page_limit=21&page=1&delivery_type=0&ver=1633421773554"
 c = Crawler()
-#res.raise_for_status()
 #j = res.json()
 #items = res.find_all("span",attrs={"class":"screen_out"})
-
-#print(j)

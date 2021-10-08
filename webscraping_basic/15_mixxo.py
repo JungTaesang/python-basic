@@ -71,10 +71,9 @@ def get_items(soup):
     if goods_area is not None and goods_area.ul is not None:
         return [g.attrs.get("id").split("_")[-1] for g in goods_area.ul.select("li")]
     return []
-#https://mixxo.elandmall.com/goods/initGoodsDetail.action?goods_no=2109619503&vir_vend_no=VV16001901&sale_shop_divi_cd=11&disp_ctg_no=&sale_area_no=D1606000566&tr_yn=N&conts_dist_no=2109619503&conts_divi_cd=20&rel_no=2109619503&rel_divi_cd=10&brand_nm=%EB%AF%B8%EC%8F%98&goods_nm=%5B%E2%9C%A8%EB%9D%BC%EC%9D%B4%EB%B8%8C%2B%EC%B9%B4%EB%93%9C%EC%82%AC%EC%B5%9C%EB%8C%8012%25%E2%9C%A8%5D%EC%84%B8%EB%AF%B8+%EC%98%A4%EB%B2%84%ED%95%8F+%ED%85%8C%EC%9D%BC%EB%9F%AC%EB%93%9C+%EC%9E%90%EC%BC%93+MIWJKBT25G&cust_sale_price=55920&ga_ctg_nm=OUTER&isComingSoonYn=N&isReservComingSoonYn=N&reserve_start_dtime=&dlp_list=&dlp_category=CLOTHING%2FALL&flag_img_path=%2F%2Fwww.elandrs.com%2Fupload%2Fdspl%2Fbanner%2F90%2F448%2F00%2F211000000298448.png&p_cart_grp_cd=
+
 goods_ids = []
 items = [] 
-num = 0
 for ctgr_no in TARGET_CTGRS:
     initial_data['disp_ctg_no'] = ctgr_no
     initial_data['category_2depth'] = ctgr_no
@@ -90,31 +89,26 @@ for ctgr_no in TARGET_CTGRS:
         
         for item in goods_ids:
             url = "https://m-mixxo.elandmall.com/goods/initGoodsDetailLayer.action?goods_no=" + item
-            num +=1
-            print(num)
             if item in items:continue
             else: items.append(item)
 
             res = requests.post(url, headers=COMMON_H, data=initial_data)
             soup2 = BeautifulSoup(res.text, 'html.parser')
-            image_url = "https:" + soup2.find("div", attrs= {"class":"g_img"}).find("img")["src"]
-            
-            print(image_url)
 
-            path = "C:/image/" + f"{item}.png"
-            urllib.request.urlretrieve(image_url, path)
+            name = soup2.find("h3", attrs={"class": "gd_name"}).get_text()
+            price = soup2.select_one(".prc > .sp").text
+            sale = soup2.find("dd" , attrs= {"class":"prc"}).get_text()
+            if "%" in sale:
+                sale = soup2.find("span" , attrs= {"class":"rt"}).get_text()
+                print(f"\n페이지 : {page} \n종류 : {tag} \n이름 : {name} \n가격 : {price} \n할인 : {sale} \n링크 : {url}") 
+                data = [tag, name, price, sale, url]
+                writer.writerow(data)
+            else:
+                print(f"\n페이지 : {page} \n종류 : {tag} \n이름 : {name} \n가격 : {price} \n링크 : {url}")
+                data = [tag, name, price, "", url]
+                writer.writerow(data)
+
+            #image_url = "https:" + soup2.find("div", attrs= {"class":"g_img"}).find("img")["src"]
+            #path = "C:/image/" + f"{item}.png"
+            #urllib.request.urlretrieve(image_url, path)
             #wget --no-check-certificate https://www.elandrs.com/upload/prd/img/538/600/2109659538_0000006.jpg
-
-            #name = soup2.find("h3", attrs={"class": "gd_name"}).get_text()
-            #price = soup2.select_one(".prc > .sp").text
-            #sale = soup2.find("dd" , attrs= {"class":"prc"}).get_text()
-
-            #if "%" in sale:
-            #    sale = soup2.find("span" , attrs= {"class":"rt"}).get_text()
-            #    print(f"\n페이지 : {page} \n종류 : {tag} \n이름 : {name} \n가격 : {price} \n할인 : {sale} \n링크 : {url}") 
-            #    data = [tag, name, price, sale, url]
-            #    writer.writerow(data)
-            #else:
-            #    print(f"\n페이지 : {page} \n종류 : {tag} \n이름 : {name} \n가격 : {price} \n링크 : {url}")
-            #    data = [tag, name, price, "", url]
-            #    writer.writerow(data)

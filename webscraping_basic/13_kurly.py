@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 from bs4 import BeautifulSoup
 from requests import Session
+from requests.sessions import session
 
 #https://dojang.io/mod/page/view.php?id=2476
 s = requests.Session()
@@ -47,15 +48,10 @@ class Crawler:
 
 
 
-
 url = "https://api.kurly.com/v2/home/search?keyword=cj&sort_type=-1&page_limit=21&page=1&delivery_type=0&ver=1633421773554"
-#headers['authorization'] = 'Bearer ' + token
-c = Crawler
-res = requests.get(url)
-res.raise_for_status()
-j = res.json()
+c = Crawler()
+#res.raise_for_status()
+#j = res.json()
 #items = res.find_all("span",attrs={"class":"screen_out"})
 
-print(j)
-
-#div class="group_btn" = 상품 아이디
+#print(j)

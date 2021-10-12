@@ -1,11 +1,24 @@
 import csv
-from os import name
+from os import link
+from typing import Text
+import urllib.request
 import requests
 import re
-from datetime import datetime
+from datetime import datetime, time
 from bs4 import BeautifulSoup
 from requests import Session
 
+filename = "컬리.csv"
+f = open(filename, "w", encoding="utf-8-sig", newline="")
+writer = csv.writer(f)
+title = ["제품이름", "판매가격", "회원할인가", "판매단위", "중량/용량","제품링크"]
+writer.writerow(title)
+
+filename_2 = "컬리_리뷰.csv"
+f_2 = open(filename_2, "w", encoding="utf-8-sig", newline="")
+writer_2 = csv.writer(f_2)
+title_2 = ["제목", "날짜", "내용"]
+writer_2.writerow(title_2)
 
 #https://dojang.io/mod/page/view.php?id=2476
 s = requests.Session()
@@ -43,25 +56,86 @@ class Crawler:
         area = txt[txt.find("var jwtToken"): txt.find("var apiDomain") - 2]
         self.token = re.sub("\'", '', area.split("=")[1]).strip()
         self.set_header()
-    
-    def lets_crawl(self):
-        self.set_token_from_site()
 
 
+def get_json(url):
+    res = c.session.get(url)
+    res.raise_for_status()
+    return res.json()
 
+#파이썬 인코딩 euc-kr
 
-url = "https://api.kurly.com/v2/home/search?keyword=cj&sort_type=-1&page_limit=21&page=1&delivery_type=0&ver=1633846524215"
+MAX_PAGE = 1000
+goods_id = []
+total = []
+big_title = []
+small_title = []
 c = Crawler()
-res = c.session.get(url)
-res.raise_for_status()
-j = res.json()
-for item in j["data"]["products"]:
-    id = item["no"]
-    name = item["name"]
-    print(id, name)
-    #url = "https://www.kurly.com/shop/goods/goods_view.php?&goodsno={id}"
-    #res = c.session.get(url)
-    #res.raise_for_status()
-    
+for page in range(1, MAX_PAGE):
+    url = f"https://api.kurly.com/v2/home/search?keyword=cj&sort_type=-1&page_limit=21&page={page}&delivery_type=0&ver=1633846524215"
+    j = get_json(url)
+    total = j["paging"]["total"]
+    if total == len(goods_id):
+        break
+    for item_id in j["data"]["products"]:
+        get_id = item_id["no"]
+        for item in get_id:
+            if get_id in goods_id:continue
+            else: goods_id.append(get_id)
+            url = f"https://api.kurly.com/v3/home/products/{get_id}"
+            i = get_json(url)
 
-#items = res.find_all("span",attrs={"class":"screen_out"})
+            #image_url = i["data"]["detail_image_url"]
+            #path = "C:/image/" + f"{get_id}.png"
+            #urllib.request.urlretrieve(image_url, path)
+
+            #name = i["data"]["name"]
+            #price = i["data"]["original_price"]
+            #unit_text = i["data"]["unit_text"]
+            #weight = i["data"]["weight"]
+            #discounted_price = i["data"]["discounted_price"]
+            #if price == discounted_price: discounted_price = ""
+            #link = f"https://www.kurly.com/shop/goods/goods_view.php?&goodsno={get_id}"
+
+            #data = [name, price, discounted_price, unit_text, weight,link]
+            #writer.writerow(data)
+            for page_idx in range(1,2):
+                url = f"https://www.kurly.com/shop/goods/goods_review_list.php?goodsno={get_id}&page={page_idx}]"
+                res = c.session.get(url)
+                res.raise_for_status()
+                soup = BeautifulSoup(res.text, "html.parser")  
+
+                day_index = 0 
+                day_list = []
+
+                day = soup.find_all("td", attrs={"class":"time"})[2:]
+                review = soup.find_all("div", attrs={"class":"inner_review"})[2:]
+                big_titles = soup.find_all("strong", attrs={"class":"name"})[2:]
+                small_titles = soup.find_all("p", attrs={"class":"package"})[2:]
+
+                for big_titles in big_titles:
+                    big_titles = big_titles.get_text()
+                    if big_titles not in big_title:
+                        big_title.append(big_titles)
+
+                for small_titles in small_titles:
+                    small_titles = small_titles.get_text()
+                    if small_titles not in small_title:
+                        small_title.append(small_titles)
+
+                for day in day:
+                        day = day.get_text()
+                        day_list.append(day)
+
+                for review in review:
+                    review = review.get_text()
+                    review = review.split('\n')
+                    review = list(set(review))
+                    review.remove('')
+                    review.remove(big_titles)
+                    if small_title in review: review.remove(small_title)
+                    review = " ".join(review)
+                    data_2 = [big_titles, day_list[day_index], review]
+                    print(data_2)
+                    day_index += 1
+                    writer_2.writerow(data_2)
